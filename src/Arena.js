@@ -4,6 +4,7 @@ class Arena {
     this.monsters = monsters;
     this.size = size;
     this.message = "";
+    this.tiles = []
   }
 
   /**
@@ -19,11 +20,23 @@ class Arena {
   /**
    * Calcul from the distance of the fight is posssible
    * @param {Object} attacker
-   * @param {Obect} defender
+   * @param {Object} defender
    * @returns Boolean
    */
   isTouchable(attacker, defender) {
     return this.getDistance(attacker, defender) <= attacker.getRange()
+  }
+
+
+  /**
+   * Calcul the new coordinates after the move if possible
+   * @param {number} x
+   * @param {number} y
+   * @returns Object with Tile Class
+   */
+
+  getTile(x, y) {
+    return this.tiles.filter(tile => tile.x === x && tile.y === y);
   }
 
   /**
@@ -34,17 +47,22 @@ class Arena {
   move(direction) {
     let y = this.hero.y;
     let x = this.hero.x;
+
     if (direction === "N") this.hero.y -= 1;
     if (direction === "S") this.hero.y += 1;
     if (direction === "E") this.hero.x -= 1;
     if (direction === "W") this.hero.x += 1;
 
-    if (!this.checkOnMap(this.hero.x, this.hero.y)) {
-      this.message = "Moving outside the map is not possible";
-    } else if (!this.CheckNoMonster(this.hero.x, this.hero.y)) {
-      this.message = "Position already used, you can t move here";
-    } else {
-      return { x, y };
+    const tile = this.getTile(this.hero.x, this.hero.y);
+
+    if (tile[0] && tile[0].crossable) {
+      if (!this.checkOnMap(this.hero.x, this.hero.y)) {
+        this.message = "Moving outside the map is not possible";
+      } else if (!this.CheckNoMonster(this.hero.x, this.hero.y)) {
+        this.message = "Position already used, you can t move here";
+      } else {
+        return { x, y };
+      }
     }
 
     document.getElementById('error').innerHTML = this.message;
@@ -92,7 +110,7 @@ class Arena {
     if (this.isTouchable(this.hero, this.monsters[index])) {
       this.hero.fight(this.monsters[index]);
 
-      if (this.isTouchable(this.monsters[index], this.hero && this.monsters[index].isAlive())) {
+      if (this.isTouchable(this.monsters[index], this.hero) && this.monsters[index].isAlive()) {
         this.monsters[index].fight(this.hero);
       }
 
